@@ -101,7 +101,13 @@ function showVoteUi() {
 function showError() {
   intro.hidden = true;
   voteUi.hidden = false;
-  stage.innerHTML = '<div class="empty">—</div>';
+  card.hidden = true;
+  stage.querySelector('.done')?.remove();
+  stage.querySelector('.empty')?.remove();
+  const empty = document.createElement('div');
+  empty.className = 'empty';
+  empty.textContent = '—';
+  stage.appendChild(empty);
   actions.hidden = true;
   progress.hidden = true;
 }
@@ -124,23 +130,31 @@ function updateProgress() {
 }
 
 function showDone() {
-  stage.innerHTML = `
-    <div class="done">
+  card.hidden = true;
+  stage.querySelector('.empty')?.remove();
+
+  let done = stage.querySelector('.done');
+  if (!done) {
+    done = document.createElement('div');
+    done.className = 'done';
+    done.innerHTML = `
       <p>Thank you.</p>
       <p>Please wait for our response.</p>
       <button id="another" class="intro-btn intro-btn--inline" type="button">→</button>
-    </div>
-  `;
+    `;
+    stage.appendChild(done);
+    done.querySelector('#another').addEventListener('click', () => {
+      sessionStorage.removeItem(storageKey);
+      voterToken = null;
+      votes.clear();
+      nameInput.value = '';
+      done.remove();
+      showIntro();
+    });
+  }
+
   actions.hidden = true;
   progress.hidden = true;
-
-  document.getElementById('another').addEventListener('click', () => {
-    sessionStorage.removeItem(storageKey);
-    voterToken = null;
-    votes.clear();
-    nameInput.value = '';
-    showIntro();
-  });
 }
 
 function showCurrent() {
@@ -151,12 +165,14 @@ function showCurrent() {
     return;
   }
 
+  stage.querySelector('.done')?.remove();
+  stage.querySelector('.empty')?.remove();
   actions.hidden = false;
   updateProgress();
+  card.hidden = false;
   card.className = 'swipe-card';
   cardImg.src = image.url;
-  stage.innerHTML = '';
-  stage.appendChild(card);
+  cardImg.alt = '';
 }
 
 async function submitVote(type) {
