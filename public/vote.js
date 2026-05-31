@@ -2,6 +2,7 @@ const slug = location.pathname.split('/').pop();
 const storageKey = `voter:${slug}`;
 
 const introForm = document.getElementById('intro-form');
+const projectError = document.getElementById('project-error');
 const nameInput = document.getElementById('name-input');
 const voteUi = document.getElementById('vote-ui');
 const progress = document.getElementById('progress');
@@ -41,6 +42,10 @@ async function startVoting() {
   });
 
   if (!res.ok) {
+    if (res.status === 404) {
+      showProjectMissing();
+      return;
+    }
     nameInput.classList.add('name-input--error');
     return;
   }
@@ -73,7 +78,7 @@ async function load() {
   if (!sessionRes.ok) {
     sessionStorage.removeItem(storageKey);
     voterToken = null;
-    showIntro();
+    showProjectMissing();
     return;
   }
 
@@ -96,12 +101,21 @@ async function load() {
   showCurrent();
 }
 
+function showProjectMissing() {
+  clearStageMessages();
+  introForm.hidden = true;
+  voteUi.hidden = true;
+  projectError.hidden = false;
+}
+
 function showIntro() {
   clearStageMessages();
   card.hidden = false;
   cardImg.removeAttribute('src');
+  projectError.hidden = true;
   introForm.hidden = false;
   voteUi.hidden = true;
+  nameInput.classList.remove('name-input--error');
   nameInput.focus();
 }
 

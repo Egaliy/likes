@@ -330,6 +330,19 @@ a.icon-btn {
   min-height: 0;
 }
 
+.project-error {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  opacity: 0.55;
+  font-size: 14px;
+}
+
+.project-error[hidden] {
+  display: none !important;
+}
+
 #intro-form[hidden],
 #vote-ui[hidden] {
   display: none !important;
