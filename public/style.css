@@ -330,8 +330,8 @@ a.icon-btn {
   min-height: 0;
 }
 
-#vote-ui[hidden],
-#intro[hidden] {
+#intro-form[hidden],
+#vote-ui[hidden] {
   display: none !important;
 }
 

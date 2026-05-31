@@ -1,9 +1,8 @@
 const slug = location.pathname.split('/').pop();
 const storageKey = `voter:${slug}`;
 
-const intro = document.getElementById('intro');
+const introForm = document.getElementById('intro-form');
 const nameInput = document.getElementById('name-input');
-const nameSubmit = document.getElementById('name-submit');
 const voteUi = document.getElementById('vote-ui');
 const progress = document.getElementById('progress');
 const stage = document.getElementById('stage');
@@ -18,9 +17,9 @@ let voterToken = sessionStorage.getItem(storageKey);
 const votes = new Map();
 let busy = false;
 
-nameSubmit.addEventListener('click', startVoting);
-nameInput.addEventListener('keydown', (event) => {
-  if (event.key === 'Enter') startVoting();
+introForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  startVoting();
 });
 
 btnDislike.addEventListener('click', () => submitVote('dislike'));
@@ -101,13 +100,13 @@ function showIntro() {
   clearStageMessages();
   card.hidden = false;
   cardImg.removeAttribute('src');
-  intro.hidden = false;
+  introForm.hidden = false;
   voteUi.hidden = true;
   nameInput.focus();
 }
 
 function showVoteUi() {
-  intro.hidden = true;
+  introForm.hidden = true;
   voteUi.hidden = false;
 }
 
