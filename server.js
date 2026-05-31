@@ -1,30 +1,94 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const multer = require('multer');
 const db = require('./db');
+const {
+  ADMIN_PASSWORD,
+  isAuthenticated,
+  requireAdmin,
+  setAuthCookie,
+} = require('./auth');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const IMAGES_DIR = path.join(__dirname, 'images');
+const MAX_IMAGES = 40;
 const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg']);
+
+function getImageDirs() {
+  const dirs = ['imgs', 'images'].map((dir) => path.join(__dirname, dir));
+
+  for (const dir of dirs) {
+    if (!fs.existsSync(dir)) continue;
+    const hasImages = fs.readdirSync(dir).some((file) =>
+      IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase())
+    );
+    if (hasImages) return [dir];
+  }
+
+  return dirs.filter((dir) => fs.existsSync(dir));
+}
+
+const UPLOAD_DIR = fs.existsSync(path.join(__dirname, 'imgs'))
+  ? path.join(__dirname, 'imgs')
+  : path.join(__dirname, 'images');
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/images', express.static(IMAGES_DIR));
+for (const dir of getImageDirs()) {
+  app.use('/images', express.static(dir));
+}
+
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      if (!fs.existsSync(UPLOAD_DIR)) {
+        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+      }
+      cb(null, UPLOAD_DIR);
+    },
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      const base =
+        path
+          .basename(file.originalname, ext)
+          .replace(/[^a-zA-Z0-9._-]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 80) || 'image';
+      cb(null, `${base}${ext}`);
+    },
+  }),
+  limits: { fileSize: 15 * 1024 * 1024, files: 40 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (IMAGE_EXTENSIONS.has(ext)) {
+      cb(null, true);
+      return;
+    }
+    cb(new Error('invalid_type'));
+  },
+});
 
 function listImages() {
-  if (!fs.existsSync(IMAGES_DIR)) {
-    fs.mkdirSync(IMAGES_DIR, { recursive: true });
+  const seen = new Set();
+  const images = [];
+
+  for (const dir of getImageDirs()) {
+    for (const file of fs.readdirSync(dir)) {
+      if (!IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase()) || seen.has(file)) {
+        continue;
+      }
+      seen.add(file);
+      images.push({
+        id: file,
+        url: `/images/${encodeURIComponent(file)}`,
+      });
+    }
   }
 
-  return fs
-    .readdirSync(IMAGES_DIR)
-    .filter((file) => IMAGE_EXTENSIONS.has(path.extname(file).toLowerCase()))
-    .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-    .map((filename) => ({
-      id: filename,
-      url: `/images/${encodeURIComponent(filename)}`,
-    }));
+  return images
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
+    .slice(0, MAX_IMAGES);
 }
 
 function slugify(value) {
@@ -128,11 +192,39 @@ function getVoterInSession(slug, voterToken) {
   return { session, voter };
 }
 
+app.get('/api/admin/me', (req, res) => {
+  res.json({ ok: isAuthenticated(req) });
+});
+
+app.post('/api/admin/login', (req, res) => {
+  if (req.body.password !== ADMIN_PASSWORD) {
+    return res.status(401).json({ error: 'invalid_password' });
+  }
+
+  setAuthCookie(res);
+  res.json({ ok: true });
+});
+
 app.get('/api/images', (_req, res) => {
   res.json(listImages());
 });
 
-app.get('/api/sessions', (_req, res) => {
+app.post('/api/images', requireAdmin, (req, res) => {
+  upload.array('images', 40)(req, res, (error) => {
+    if (error) {
+      return res.status(400).json({ error: 'upload_failed' });
+    }
+
+    const uploaded = (req.files || []).map((file) => ({
+      id: file.filename,
+      url: `/images/${encodeURIComponent(file.filename)}`,
+    }));
+
+    res.json({ uploaded, total: listImages().length });
+  });
+});
+
+app.get('/api/sessions', requireAdmin, (_req, res) => {
   const images = listImages();
 
   const sessions = db.getAllSessions().map((session) => {
@@ -152,7 +244,7 @@ app.get('/api/sessions', (_req, res) => {
   res.json({ sessions, total_images: images.length });
 });
 
-app.post('/api/sessions', (req, res) => {
+app.post('/api/sessions', requireAdmin, (req, res) => {
   const slug = slugify(req.body.slug || req.body.name);
 
   if (!slug || !/^[a-z0-9-]{2,64}$/.test(slug)) {
@@ -172,7 +264,7 @@ app.post('/api/sessions', (req, res) => {
   });
 });
 
-app.delete('/api/sessions/:slug', (req, res) => {
+app.delete('/api/sessions/:slug', requireAdmin, (req, res) => {
   const deleted = db.deleteSessionByToken(req.params.slug);
   if (!deleted) {
     return res.status(404).json({ error: 'not_found' });
@@ -197,7 +289,7 @@ app.get('/api/sessions/:slug', (req, res) => {
   });
 });
 
-app.get('/api/sessions/:slug/detail', (req, res) => {
+app.get('/api/sessions/:slug/detail', requireAdmin, (req, res) => {
   const session = db.getSessionByToken(req.params.slug);
   if (!session) {
     return res.status(404).json({ error: 'not_found' });

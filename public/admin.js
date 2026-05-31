@@ -1,4 +1,6 @@
 const createBtn = document.getElementById('create');
+const uploadBtn = document.getElementById('upload');
+const fileInput = document.getElementById('file-input');
 const slugInput = document.getElementById('slug-input');
 const latestLink = document.getElementById('latest-link');
 const projectsWrap = document.getElementById('projects');
@@ -7,6 +9,27 @@ createBtn.addEventListener('click', () => {
   slugInput.hidden = false;
   slugInput.value = '';
   slugInput.focus();
+});
+
+uploadBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', async () => {
+  if (!fileInput.files.length) return;
+
+  const formData = new FormData();
+  for (const file of fileInput.files) {
+    formData.append('images', file);
+  }
+
+  const res = await fetch('/api/images', {
+    method: 'POST',
+    body: formData,
+  });
+
+  fileInput.value = '';
+
+  if (!res.ok) return;
+  await loadProjects();
 });
 
 slugInput.addEventListener('keydown', async (event) => {
@@ -103,4 +126,4 @@ async function loadProjects() {
   }
 }
 
-loadProjects();
+requireAdmin(loadProjects);

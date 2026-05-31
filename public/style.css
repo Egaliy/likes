@@ -14,9 +14,14 @@ body {
 
 button {
   border: 0;
-  background: none;
-  color: inherit;
+  background: #fff;
+  color: #0a0a0a;
   cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 a {
@@ -42,15 +47,20 @@ a {
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 1px solid #333;
   display: grid;
   place-items: center;
   font-size: 22px;
   line-height: 1;
+  background: #fff;
+  color: #0a0a0a;
+}
+
+a.icon-btn {
+  text-decoration: none;
 }
 
 .icon-btn:hover {
-  border-color: #666;
+  opacity: 0.85;
 }
 
 .link-chip {
@@ -130,8 +140,7 @@ a {
 }
 
 .project-item__delete:hover {
-  border-color: #ff5a5a;
-  color: #ff5a5a;
+  opacity: 0.85;
 }
 
 .gallery-block + .gallery-block {
@@ -159,6 +168,7 @@ a {
   overflow: hidden;
   border: 1px solid #222;
   background: #151515;
+  padding: 0;
 }
 
 .gallery-item__count {
@@ -182,17 +192,18 @@ a {
 
 .voter-chip {
   padding: 10px 14px;
-  border: 1px solid #333;
   border-radius: 999px;
   font-size: 13px;
 }
 
 .voter-chip:hover {
-  border-color: #555;
+  opacity: 0.85;
 }
 
 .voter-chip--active {
-  border-color: #f2f2f2;
+  background: #fff;
+  color: #0a0a0a;
+  box-shadow: inset 0 0 0 2px #0a0a0a;
 }
 
 .voter-detail-disliked {
@@ -236,13 +247,12 @@ a {
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  border: 1px solid #333;
   font-size: 22px;
   line-height: 1;
 }
 
 .intro-btn:hover {
-  border-color: #666;
+  opacity: 0.85;
 }
 
 .intro-btn--inline {
@@ -256,8 +266,9 @@ a {
 .gallery-item img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
+  background: #0a0a0a;
 }
 
 .lightbox {
@@ -287,9 +298,12 @@ a {
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  border: 1px solid #444;
   font-size: 24px;
   line-height: 1;
+}
+
+.lightbox-close:hover {
+  opacity: 0.85;
 }
 
 .vote-body {
@@ -332,19 +346,23 @@ a {
 }
 
 .swipe-card {
-  width: min(100%, 420px);
-  height: 100%;
+  width: min(100%, 900px);
   max-height: 72dvh;
   border-radius: 16px;
   overflow: hidden;
   background: #151515;
   transition: transform 0.22s ease, opacity 0.22s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .swipe-card img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 72dvh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
   display: block;
 }
 
@@ -369,38 +387,22 @@ a {
   width: 64px;
   height: 64px;
   border-radius: 999px;
-  border: 2px solid #333;
   display: grid;
   place-items: center;
   font-size: 28px;
   line-height: 1;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.15s ease, opacity 0.15s ease;
 }
 
 .action-btn:hover {
   transform: scale(1.05);
+  opacity: 0.85;
 }
 
 .action-btn:disabled {
   opacity: 0.4;
   cursor: default;
   transform: none;
-}
-
-.action-btn--no {
-  color: #ff5a5a;
-}
-
-.action-btn--no:hover {
-  border-color: #ff5a5a;
-}
-
-.action-btn--yes {
-  color: #5dff9b;
-}
-
-.action-btn--yes:hover {
-  border-color: #5dff9b;
 }
 
 .done {
@@ -420,4 +422,28 @@ a {
   padding: 48px 0;
   text-align: center;
   font-size: 14px;
+}
+
+.login-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.92);
+  display: grid;
+  place-items: center;
+  z-index: 200;
+  padding: 24px;
+}
+
+.login-overlay[hidden] {
+  display: none !important;
+}
+
+.login-form {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.login-password {
+  width: min(100vw - 120px, 280px);
 }

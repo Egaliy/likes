@@ -10,6 +10,8 @@
     <main class="admin">
       <div class="admin-toolbar">
         <button id="create" class="icon-btn" type="button">+</button>
+        <button id="upload" class="icon-btn" type="button">↑</button>
+        <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml" multiple hidden />
         <input
           id="slug-input"
           class="slug-input"
@@ -22,6 +24,7 @@
       </div>
       <div id="projects" class="project-list"></div>
     </main>
+    <script src="/admin-auth.js"></script>
     <script src="/admin.js"></script>
   </body>
 </html>

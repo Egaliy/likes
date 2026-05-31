@@ -118,4 +118,4 @@ async function loadProject() {
   }
 }
 
-loadProject();
+requireAdmin(loadProject);
