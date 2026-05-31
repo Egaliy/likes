@@ -29,6 +29,10 @@ a {
   text-decoration: none;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 .admin {
   padding: 24px;
   max-width: 100%;
@@ -282,7 +286,7 @@ a.icon-btn {
 }
 
 .lightbox:not([hidden]) {
-  display: grid;
+  display: grid !important;
 }
 
 .lightbox img {

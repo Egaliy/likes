@@ -41,7 +41,10 @@ async function startVoting() {
     body: JSON.stringify({ name }),
   });
 
-  if (!res.ok) return;
+  if (!res.ok) {
+    nameInput.classList.add('name-input--error');
+    return;
+  }
 
   const voter = await res.json();
   voterToken = voter.token;
@@ -58,15 +61,22 @@ function applyVotes(votesMap) {
   }
 }
 
-async function load() {
-  const sessionRes = await fetch(`/api/sessions/${slug}`);
-  if (!sessionRes.ok) {
-    showError();
-    return;
-  }
+function clearStageMessages() {
+  stage.querySelector('.done')?.remove();
+  stage.querySelector('.empty')?.remove();
+}
 
+async function load() {
   const imagesRes = await fetch('/api/images');
   images = await imagesRes.json();
+
+  const sessionRes = await fetch(`/api/sessions/${slug}`);
+  if (!sessionRes.ok) {
+    sessionStorage.removeItem(storageKey);
+    voterToken = null;
+    showIntro();
+    return;
+  }
 
   if (!voterToken) {
     showIntro();
@@ -88,6 +98,9 @@ async function load() {
 }
 
 function showIntro() {
+  clearStageMessages();
+  card.hidden = false;
+  cardImg.removeAttribute('src');
   intro.hidden = false;
   voteUi.hidden = true;
   nameInput.focus();
@@ -98,20 +111,6 @@ function showVoteUi() {
   voteUi.hidden = false;
 }
 
-function showError() {
-  intro.hidden = true;
-  voteUi.hidden = false;
-  card.hidden = true;
-  stage.querySelector('.done')?.remove();
-  stage.querySelector('.empty')?.remove();
-  const empty = document.createElement('div');
-  empty.className = 'empty';
-  empty.textContent = '—';
-  stage.appendChild(empty);
-  actions.hidden = true;
-  progress.hidden = true;
-}
-
 function currentImage() {
   return images.find((image) => !votes.has(image.id));
 }
@@ -120,7 +119,7 @@ function updateProgress() {
   const total = images.length;
   const voted = votes.size;
 
-  if (voted >= total) {
+  if (!total || voted >= total) {
     progress.hidden = true;
     return;
   }
@@ -130,8 +129,8 @@ function updateProgress() {
 }
 
 function showDone() {
+  clearStageMessages();
   card.hidden = true;
-  stage.querySelector('.empty')?.remove();
 
   let done = stage.querySelector('.done');
   if (!done) {
@@ -158,20 +157,27 @@ function showDone() {
 }
 
 function showCurrent() {
-  const image = currentImage();
+  clearStageMessages();
 
+  if (!images.length) {
+    card.hidden = true;
+    actions.hidden = true;
+    progress.hidden = false;
+    progress.textContent = '—';
+    return;
+  }
+
+  const image = currentImage();
   if (!image) {
     showDone();
     return;
   }
 
-  stage.querySelector('.done')?.remove();
-  stage.querySelector('.empty')?.remove();
   actions.hidden = false;
-  updateProgress();
   card.hidden = false;
   card.className = 'swipe-card';
-  cardImg.src = image.url;
+  updateProgress();
+  cardImg.src = `${image.url}?v=${Date.now()}`;
   cardImg.alt = '';
 }
 
