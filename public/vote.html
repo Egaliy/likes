@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title></title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body class="vote-body">
+    <main class="vote-page">
+      <div id="intro" class="intro" hidden>
+        <input
+          id="name-input"
+          class="name-input"
+          type="text"
+          maxlength="80"
+          autocomplete="name"
+          spellcheck="false"
+          placeholder="name"
+        />
+        <button id="name-submit" class="intro-btn" type="button">→</button>
+      </div>
+
+      <div id="vote-ui" hidden>
+        <div id="progress" class="progress"></div>
+        <div id="stage" class="stage">
+          <div id="card" class="swipe-card">
+            <img id="card-img" alt="" />
+          </div>
+        </div>
+        <div id="actions" class="actions">
+          <button id="dislike" class="action-btn action-btn--no" type="button">×</button>
+          <button id="like" class="action-btn action-btn--yes" type="button">♥</button>
+        </div>
+      </div>
+    </main>
+    <script src="/vote.js"></script>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="admin">
+      <div class="admin-toolbar">
+        <a class="icon-btn" href="/">←</a>
+        <span id="project-name" class="link-chip"></span>
+      </div>
+
+      <section class="gallery-block">
+        <div class="gallery-label">Summary</div>
+        <div id="aggregated" class="gallery"></div>
+      </section>
+
+      <section class="gallery-block">
+        <div class="gallery-label">Voters</div>
+        <div id="voters" class="voter-list"></div>
+      </section>
+
+      <section id="voter-detail" class="gallery-block" hidden>
+        <div id="voter-detail-name" class="gallery-label"></div>
+        <div class="gallery-label">Liked</div>
+        <div id="liked" class="gallery"></div>
+        <div class="gallery-label voter-detail-disliked">Disliked</div>
+        <div id="disliked" class="gallery"></div>
+      </section>
+    </main>
+
+    <div id="lightbox" class="lightbox" hidden>
+      <button id="lightbox-close" class="lightbox-close" type="button">×</button>
+      <img id="lightbox-img" alt="" />
+    </div>
+
+    <script src="/project.js"></script>
+  </body>
+</html>

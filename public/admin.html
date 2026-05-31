@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <main class="admin">
+      <div class="admin-toolbar">
+        <button id="create" class="icon-btn" type="button">+</button>
+        <input
+          id="slug-input"
+          class="slug-input"
+          type="text"
+          spellcheck="false"
+          autocomplete="off"
+          hidden
+        />
+        <a id="latest-link" class="link-chip" href="#" hidden></a>
+      </div>
+      <div id="projects" class="project-list"></div>
+    </main>
+    <script src="/admin.js"></script>
+  </body>
+</html>
