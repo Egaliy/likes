@@ -55,7 +55,7 @@ async function startVoting() {
   sessionStorage.setItem(storageKey, voterToken);
   applyVotes(voter.votes);
   showVoteUi();
-  showCurrent();
+  await showCurrent();
 }
 
 function applyVotes(votesMap) {
@@ -63,6 +63,23 @@ function applyVotes(votesMap) {
   for (const [imageId, vote] of Object.entries(votesMap || {})) {
     votes.set(imageId, vote);
   }
+}
+
+async function syncVotesFromServer() {
+  if (!voterToken) return false;
+
+  const res = await fetch(`/api/sessions/${slug}/voters/${voterToken}`);
+  if (!res.ok) {
+    sessionStorage.removeItem(storageKey);
+    voterToken = null;
+    votes.clear();
+    showIntro();
+    return false;
+  }
+
+  const voter = await res.json();
+  applyVotes(voter.votes);
+  return true;
 }
 
 function clearStageMessages() {
@@ -87,18 +104,12 @@ async function load() {
     return;
   }
 
-  const voterRes = await fetch(`/api/sessions/${slug}/voters/${voterToken}`);
-  if (!voterRes.ok) {
-    sessionStorage.removeItem(storageKey);
-    voterToken = null;
-    showIntro();
+  if (!(await syncVotesFromServer())) {
     return;
   }
 
-  const voter = await voterRes.json();
-  applyVotes(voter.votes);
   showVoteUi();
-  showCurrent();
+  await showCurrent();
 }
 
 function showProjectMissing() {
@@ -122,6 +133,7 @@ function showIntro() {
 function showVoteUi() {
   introForm.hidden = true;
   voteUi.hidden = false;
+  projectError.hidden = true;
 }
 
 function currentImage() {
@@ -169,7 +181,25 @@ function showDone() {
   progress.hidden = true;
 }
 
-function showCurrent() {
+function loadCardImage(url) {
+  return new Promise((resolve) => {
+    const onDone = (ok) => {
+      cardImg.onload = null;
+      cardImg.onerror = null;
+      resolve(ok);
+    };
+
+    cardImg.onload = () => onDone(true);
+    cardImg.onerror = () => onDone(false);
+    cardImg.src = url;
+
+    if (cardImg.complete && cardImg.naturalWidth > 0) {
+      onDone(true);
+    }
+  });
+}
+
+async function showCurrent() {
   clearStageMessages();
 
   if (!images.length) {
@@ -190,8 +220,11 @@ function showCurrent() {
   card.hidden = false;
   card.className = 'swipe-card';
   updateProgress();
-  cardImg.src = `${image.url}?v=${Date.now()}`;
-  cardImg.alt = '';
+
+  const loaded = await loadCardImage(image.url);
+  if (!loaded) {
+    cardImg.src = image.url;
+  }
 }
 
 async function submitVote(type) {
@@ -203,29 +236,34 @@ async function submitVote(type) {
   busy = true;
   btnDislike.disabled = true;
   btnLike.disabled = true;
-
   card.classList.add(type === 'like' ? 'fly-right' : 'fly-left');
 
-  const res = await fetch(`/api/sessions/${slug}/voters/${voterToken}/vote`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      imageId: image.id,
-      liked: type === 'like',
-    }),
-  });
+  try {
+    const res = await fetch(`/api/sessions/${slug}/voters/${voterToken}/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        imageId: image.id,
+        liked: type === 'like',
+      }),
+    });
 
-  await new Promise((resolve) => setTimeout(resolve, 220));
+    await new Promise((resolve) => setTimeout(resolve, 220));
 
-  if (res.ok) {
-    votes.set(image.id, type);
+    if (res.ok) {
+      votes.set(image.id, type);
+    } else {
+      await syncVotesFromServer();
+    }
+  } catch {
+    await syncVotesFromServer();
+  } finally {
+    card.classList.remove('fly-right', 'fly-left');
+    busy = false;
+    btnDislike.disabled = false;
+    btnLike.disabled = false;
+    await showCurrent();
   }
-
-  card.classList.remove('fly-right', 'fly-left');
-  busy = false;
-  btnDislike.disabled = false;
-  btnLike.disabled = false;
-  showCurrent();
 }
 
 load();
